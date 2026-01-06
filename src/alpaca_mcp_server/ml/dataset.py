@@ -92,7 +92,16 @@ def build_options_dataset(
 
     out_csv_gz.parent.mkdir(parents=True, exist_ok=True)
 
-    fieldnames = [
+    # Snapshot dataset at `cfg.end` (as-of).
+    #
+    # We intentionally do NOT loop over historical as-of dates here because
+    # this builder only requires a "latest option quote" API. Using a
+    # latest-quote endpoint while iterating past timestamps would silently
+    # produce incorrect (time-inconsistent) training data.
+    asof_dt = cfg.end.astimezone(timezone.utc) if cfg.end.tzinfo else cfg.end.replace(tzinfo=timezone.utc)
+    asof_date = asof_dt.date()
+
+    base_fieldnames = [
         "asof",
         "underlying_symbol",
         "option_symbol",
@@ -107,20 +116,21 @@ def build_options_dataset(
         "label",
         "label_reason",
     ]
-    # AI feature columns are dynamic; we’ll append them to each row.
+
+    # AI feature columns are dynamic; we determine them up-front so they land in the CSV.
+    ai_fieldnames: list[str] = []
+    if ai_provider is not None:
+        keys: set[str] = set()
+        for sym in cfg.underlying_symbols:
+            feats = as_numeric_features(ai_provider.get_features(sym, asof_dt))
+            keys.update(feats.keys())
+        ai_fieldnames = sorted(keys)
+
+    fieldnames = base_fieldnames + ai_fieldnames
 
     with gzip.open(out_csv_gz, "wt", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
-
-        # Snapshot dataset at `cfg.end` (as-of).
-        #
-        # We intentionally do NOT loop over historical as-of dates here because
-        # this builder only requires a "latest option quote" API. Using a
-        # latest-quote endpoint while iterating past timestamps would silently
-        # produce incorrect (time-inconsistent) training data.
-        asof_dt = cfg.end.astimezone(timezone.utc) if cfg.end.tzinfo else cfg.end.replace(tzinfo=timezone.utc)
-        asof_date = asof_dt.date()
 
         # Iterate per underlying (single as-of).
         for sym in cfg.underlying_symbols:

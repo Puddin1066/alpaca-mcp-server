@@ -57,6 +57,7 @@ def train_favorable_option_model(
         "underlying_symbol",
         "option_symbol",
         "expiration",
+        "option_type",
         "label_reason",
     }
     feature_cols = [c for c in df.columns if c not in drop_cols]
