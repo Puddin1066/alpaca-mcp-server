@@ -1,0 +1,10 @@
+# Optional ML dependencies (NOT required to run the MCP server).
+#
+# Install with:
+#   python3 -m pip install -r requirements-ml.txt
+#
+# These are used by scripts in ./scripts/ and modules under src/alpaca_mcp_server/ml/.
+numpy>=2.0.0
+pandas>=2.2.0
+scikit-learn>=1.5.0
+joblib>=1.4.0

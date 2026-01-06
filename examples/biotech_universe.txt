@@ -1,0 +1,15 @@
+# Example biotech(ish) universe file.
+#
+# Replace this with your own definition of "biotech markets":
+# - XBI / IBB constituents
+# - Your internal coverage list
+# - Liquidity-filtered biotech tickers
+#
+# One underlying ticker per line:
+XBI
+IBB
+VRTX
+REGN
+MRNA
+GILD
+AMGN
